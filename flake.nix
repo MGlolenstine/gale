@@ -1,5 +1,6 @@
 {
   inputs = {
+    naersk.url = "github:nix-community/naersk/master";
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     utils.url = "github:numtide/flake-utils";
 
@@ -9,7 +10,7 @@
     };
   };
 
-  outputs = { self, nixpkgs, utils, nixpkgs-mozilla }:
+  outputs = { self, nixpkgs, utils, naersk, nixpkgs-mozilla }:
     utils.lib.eachDefaultSystem (system:
       let
         pkgs = (import nixpkgs) {
@@ -18,6 +19,16 @@
           overlays = [
             (import nixpkgs-mozilla)
           ];
+        };
+        
+        toolchain = (pkgs.rustChannelOf {
+          rustToolchain = ./src-tauri/rust-toolchain.toml;
+          sha256 = "sha256-WzO5hWsH0tF9O3VDgmURQr/tkSo4DjmVJ4INlB/MGL4=";
+        }).rust;
+        
+        naersk-lib = pkgs.callPackage naersk {
+          cargo = toolchain;
+          rustc = toolchain;
         };
         
         neededDeps = with pkgs; [
@@ -55,7 +66,8 @@
             export WEBKIT_DISABLE_COMPOSITING_MODE=1
           '';
           buildInputs = [
-            rustup
+            toolchain
+            # rustup
             rust-analyzer
             cargo-tauri
             nodejs
