@@ -28,7 +28,7 @@ use uuid::Uuid;
 pub mod commands;
 
 pub fn setup(app: &AppHandle) -> Result<()> {
-    tauri_plugin_deep_link::register("ror2mm", deep_link_handler(app.clone()))?;
+    // tauri_plugin_deep_link::register("ror2mm", deep_link_handler(app.clone()))?;
 
     Ok(())
 }
@@ -338,20 +338,21 @@ pub async fn update_mods(uuids: &[Uuid], app: &tauri::AppHandle) -> Result<()> {
                     .borrow(&thunderstore)?
                     .version
                     .version_number;
-        
+
                 let latest = thunderstore
                     .get_package(uuid)?
                     .versions
                     .first()
                     .expect("package should have at least one version");
-        
+
                 if installed >= &latest.version_number {
                     return Ok(None);
                 }
-        
-                manager.active_profile_mut()
+
+                manager
+                    .active_profile_mut()
                     .force_remove_mod(uuid, &thunderstore)?;
-        
+
                 Ok(Some(ModRef {
                     package_uuid: *uuid,
                     version_uuid: latest.uuid4,
